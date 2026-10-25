@@ -4,7 +4,7 @@ A pixel-art run-and-gun platformer inspired by Metal Slug. Fight through a mount
 
 It runs in the browser using plain HTML5 Canvas and JavaScript. There's no build step and no dependencies, and all art and sound are generated in code.
 
-![Title screen](mockups/1-title.png)
+![Trigger Ridge](mockups/portfolio-cover.png)
 
 ## Play
 
@@ -35,6 +35,7 @@ Open `index.html` in any modern browser, then press **Enter** to start.
 | | |
 |---|---|
 | ![Machine gun](mockups/4-machine-gun.png) | ![Jetpack flight](mockups/6-jetpack-flight.png) |
+| ![Mouse aiming](mockups/5-mouse-aim.png) | ![Machete combo](mockups/7-machete-combo.png) |
 
 ## Project structure
 
@@ -48,5 +49,5 @@ js/art.js         character rig, sprites and scenery (all drawn in code)
 js/background.js  parallax mountain vista
 js/audio.js       synthesized sound effects
 js/input.js       keyboard and mouse
-mockups/          screenshots
+mockups/          screenshots and the cover image
 ```
