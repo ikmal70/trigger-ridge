@@ -60,8 +60,8 @@ class Knight extends Entity {
 
   onHit(g, dmg, dir, kb) {
     this.hp -= dmg;
-    this.flash = 10;
-    g.fx.sparks(this.cx, this.y + 12, dir, SPARK_BLIGHT);
+    this.flash = dmg < 1 ? 4 : 10;
+    g.fx.sparks(this.cx, this.y + 12, dir, dmg < 1 ? SPARK_GUN : SPARK_BLIGHT, dmg < 1 ? 3 : 7);
     if (this.hp <= 0) {
       this.dead = true;
       g.fx.burst(this.cx, this.y + 12, 22, ['#5a4a6a', '#8a7aa0', '#7ab040', '#ff4ad0'], { speed: 3, grav: 0.15, life: 40, size: 2, up: 1 });
@@ -71,6 +71,7 @@ class Knight extends Entity {
       Sfx.play('kill');
       return;
     }
+    if (dmg < 1) return Sfx.play('tick'); // bullets chip away without staggering
     g.freeze(4);
     Sfx.play('hit');
     // Light hits don't interrupt a swing that's already coming; a heavy hit does.
@@ -128,9 +129,10 @@ class Wisp extends Entity {
   onHit(g, dmg, dir) {
     this.hp -= dmg;
     this.flash = 8;
-    this.vx = dir * 2;
-    g.fx.sparks(this.cx, this.cy, dir, SPARK_BLIGHT);
+    this.vx = dir * (dmg < 1 ? 0.8 : 2);
+    g.fx.sparks(this.cx, this.cy, dir, dmg < 1 ? SPARK_GUN : SPARK_BLIGHT, dmg < 1 ? 3 : 7);
     if (this.hp > 0) {
+      if (dmg < 1) return Sfx.play('tick');
       g.freeze(3);
       Sfx.play('hit');
       return;
@@ -186,36 +188,34 @@ class Orb extends Entity {
   }
 }
 
-// Crossbow bolt fired by Rowan.
-class Bolt extends Entity {
-  constructor(vx) {
-    super(8, 3);
-    Object.assign(this, { vx, life: 50, layer: 2 });
+// Handgun bullet fired by Rowan. Weak alone, but they come fast.
+class Bullet extends Entity {
+  constructor(vx, vy) {
+    super(4, 3);
+    Object.assign(this, { vx, vy, life: 45, layer: 2 });
   }
 
   update(g) {
     this.x += this.vx;
-    const tipX = this.vx > 0 ? this.x + this.w : this.x;
-    if (--this.life <= 0 || isSolid(g.level.tileAt(tipX, this.cy))) {
+    this.y += this.vy;
+    if (--this.life <= 0 || isSolid(g.level.tileAt(this.cx, this.cy))) {
       this.dead = true;
-      g.fx.sparks(tipX, this.cy, -Math.sign(this.vx), SPARK_TEAL, 4);
+      g.fx.sparks(this.cx, this.cy, -Math.sign(this.vx || 1), SPARK_GUN, 3);
       return;
     }
     for (const e of g.entities) {
       if (!e.hittable || e.dead || !overlap(this, e)) continue;
-      e.onHit(g, 1, Math.sign(this.vx), 1.2);
+      e.onHit(g, 0.5, Math.sign(this.vx) || 1, 0.4);
       this.dead = true;
       return;
     }
   }
 
   draw(ctx, cam) {
-    const f = Math.sign(this.vx), x = Math.round((f > 0 ? this.x + this.w : this.x) - cam.x), y = Math.round(this.cy - cam.y);
-    ctx.globalAlpha = 0.4;
-    px(ctx, '#5ff0e0', f > 0 ? x - 16 : x + 2, y, 14, 1);
-    ctx.globalAlpha = 1;
-    px(ctx, '#5ff0e0', f > 0 ? x - 8 : x + 1, y, 7, 1);
-    px(ctx, '#ffffff', f > 0 ? x - 3 : x, y - 1, 3, 3);
+    const x = Math.round(this.cx - cam.x), y = Math.round(this.cy - cam.y), sx = Math.sign(this.vx), sy = Math.sign(this.vy);
+    px(ctx, '#ff9030', x - sx * 4, y - sy * 4, 2, 2);
+    px(ctx, '#ffe060', x - sx * 2 - 1, y - sy * 2 - 1, 3, 3);
+    px(ctx, '#ffffff', x, y, 2, 2);
   }
 }
 
@@ -285,7 +285,7 @@ class Petal extends Entity {
   }
 }
 
-// Checkpoint. Touching it restores HP and wings and moves the respawn point here.
+// Checkpoint. Touching it restores HP and moves the respawn point here.
 class SpiritStone extends Entity {
   constructor(id) {
     super(14, 26);
@@ -299,7 +299,6 @@ class SpiritStone extends Entity {
       this.lit = true;
       g.checkpoint = { x: this.cx, bottom: this.y + this.h, id: this.id };
       p.hp = p.maxHp;
-      p.wing = PHYS.wingMax;
       g.fx.text('CHECKPOINT', this.cx, this.y - 10, '#a8fff4');
       g.fx.burst(this.cx, this.y + 8, 24, ['#5ff0e0', '#ffffff', '#a8fff4'], { speed: 2.5, grav: -0.03, life: 40 });
       Sfx.play('checkpoint');

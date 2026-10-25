@@ -128,7 +128,7 @@ const game = {
     this.stateT++;
     this.shake = this.shake > 0.5 ? this.shake * 0.85 : 0;
     Background.update(this.t);
-    const go = Input.pressed('start') || Input.pressed('jump') || Input.pressed('attack');
+    const go = Input.pressed('start'); // only Enter / Esc starts a game, never a click or jump
     switch (this.state) {
       case 'title':
         if (go) {
@@ -158,35 +158,73 @@ const game = {
 // ---------------------------------------------------------------- rendering
 const text = (str, x, y, color, opts = {}) => drawText(ctx, str, x, y, color, { shadow: '#1a1428', ...opts });
 
-function bar(bx, by, w, frac, c1, c2, segs) {
-  px(ctx, '#1a1428', bx - 1, by - 1, w + 2, 6);
-  px(ctx, '#3a3050', bx, by, w, 4);
+function bar(bx, by, w, h, frac, c1, c2, segs) {
+  px(ctx, '#1a1428', bx - 1, by - 1, w + 2, h + 2);
+  px(ctx, '#3a3050', bx, by, w, h);
   const fw = Math.round(w * clamp(frac, 0, 1));
-  px(ctx, c1, bx, by, fw, 3);
+  px(ctx, c1, bx, by, fw, h);
   px(ctx, c2, bx, by, fw, 1);
-  if (segs) for (let i = segs; i < w; i += segs) px(ctx, '#1a1428', bx + i, by, 1, 4);
-  px(ctx, '#e8b848', bx + w + 1, by - 1, 2, 6);
+  if (segs) for (let i = segs; i < w; i += segs) px(ctx, '#1a1428', bx + i, by, 1, h);
 }
 
+const HUD_ICONS = {
+  gun: buildImage([
+    '....oooooooo......',
+    '.ooomMMMMMMMoooooo',
+    'obbommmmmmmmssssso',
+    'obboooommmmooooooo',
+    '.oo...ommmo.......',
+    '.......ooo........',
+  ], { o: OL, M: '#8a90a4', m: '#4a4e5c', s: '#2e3038', b: '#5a3a24' }),
+  sword: buildImage([
+    '..o..............',
+    'rkokoooooooooo...',
+    'kroggWWWWWWWWWWoo',
+    'rkoggwwwwwwwwwwwo',
+    '..o.oooooooooooo.',
+  ], { o: OL, r: '#a02020', k: '#2a1a1a', g: '#3a3a44', W: '#ffffff', w: '#c8ccd6' }),
+};
+
+// Compact HUD: portrait, HP bar, and the weapon in hand (switch with Q / right click / wheel).
 function drawHUD() {
   const p = game.player;
-  ctx.globalAlpha = 0.45;
-  px(ctx, '#141024', 4, 4, 150, 32);
+  ctx.globalAlpha = 0.5;
+  px(ctx, '#141024', 3, 3, 128, 18);
   ctx.globalAlpha = 1;
-  const cx = 20, cy = 20; // portrait in a gold diamond
-  for (let i = 0; i <= 13; i++) { px(ctx, '#e8b848', cx - i, cy - 13 + i, i * 2 + 1, 1); px(ctx, '#e8b848', cx - i, cy + 13 - i, i * 2 + 1, 1); }
-  for (let i = 0; i <= 11; i++) { px(ctx, '#1a1428', cx - i, cy - 11 + i, i * 2 + 1, 1); px(ctx, '#1a1428', cx - i, cy + 11 - i, i * 2 + 1, 1); }
-  ctx.drawImage(SKINS.rowan.head, cx - 8, cy - 8, 16, 16);
-  text('ROWAN', 38, 8, '#ffffff');
+  px(ctx, '#e8b848', 4, 4, 16, 16);
+  px(ctx, '#1a1428', 5, 5, 14, 14);
+  ctx.drawImage(SKINS.rowan.head, 7, 7, 10, 10);
   const low = p.hp <= 6 && game.t % 20 < 6;
-  bar(38, 17, 100, low ? 0 : p.hp / p.maxHp, '#ff4a6a', '#ffb0c0', 10);
-  bar(38, 26, 78, p.wing / PHYS.wingMax, p.flying ? '#a8fff4' : '#5ff0e0', '#e8fffc', 0);
-  text('WING', 121, 26, '#a8fff4');
+  px(ctx, '#ff4a6a', 23, 9, 2, 2);
+  bar(27, 8, 44, 5, low ? 0 : p.hp / p.maxHp, '#ff4a6a', '#ffb0c0', 5);
+  // weapon box
+  px(ctx, '#e8b848', 76, 4, 54, 16);
+  px(ctx, '#1a1428', 77, 5, 52, 14);
+  if (p.weapon === 'gun') {
+    ctx.drawImage(HUD_ICONS.gun, 79, 7);
+    text('INF', 98, 13, '#ffe060');
+  } else {
+    ctx.drawImage(HUD_ICONS.sword, 79, 8);
+    text('BLADE', 97, 13, '#ffb050');
+  }
+  text('Q', 123, 6, '#8a8aa0', { shadow: null });
 
   if (game.t - game.startT < 900) {
-    text('ARROWS MOVE   Z JUMP   Z IN AIR: WINGS (HOLD TO RISE)', W / 2, H - 22, '#ffffff', { align: 'center' });
-    text('X SWORD (X3 COMBO)   C CROSSBOW   SHIFT DASH   ENTER PAUSE', W / 2, H - 12, '#ffffff', { align: 'center' });
+    text('A D MOVE   SPACE JUMP / DOUBLE JUMP   V JETPACK   SHIFT DASH', W / 2, H - 22, '#ffffff', { align: 'center' });
+    text('MOUSE AIM   LEFT CLICK ATTACK   RIGHT CLICK / Q SWITCH WEAPON', W / 2, H - 12, '#ffffff', { align: 'center' });
   }
+}
+
+// Aiming reticle that replaces the mouse pointer over the game.
+function drawCrosshair() {
+  const m = Input.mouse;
+  if (!m.active || game.player.dead) return;
+  const x = Math.round(m.x), y = Math.round(m.y), c = game.player.weapon === 'gun' ? '#ffffff' : '#ffb050';
+  for (const [dx, dy, w, h] of [[-6, 0, 4, 1], [3, 0, 4, 1], [0, -6, 1, 4], [0, 3, 1, 4]]) {
+    px(ctx, OL, x + dx - 1, y + dy - 1, w + 2, h + 2);
+    px(ctx, c, x + dx, y + dy, w, h);
+  }
+  px(ctx, '#ff4a6a', x, y, 1, 1);
 }
 
 function dim(alpha, color = '#0e0a1c') {
@@ -200,15 +238,15 @@ function drawTitle() {
   Background.draw(ctx, cam, 104, game.t);
   Background.drawFront(ctx, cam, game.t);
   for (let i = 0; i < W; i += 16) ctx.drawImage(TILES.top[(i >> 4) & 3], i, 196);
-  drawRig(ctx, SKINS.rowan, { ...POSE.idle(game.t), flow: 0.9, sword: 75 }, W / 2, 196, 1, game.t * 0.15);
+  drawRig(ctx, SKINS.rowan, { ...POSE.idle(game.t), flow: 0.9 }, W / 2, 196, 1, game.t * 0.15);
   for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [0, 2], [1, 2], [-1, 1], [2, 2]])
-    drawText(ctx, 'LEAFBLADE', W / 2 + a, 34 + b, '#14244a', { scale: 4, align: 'center' });
-  drawText(ctx, 'LEAFBLADE', W / 2, 34, '#ffffff', { scale: 4, align: 'center' });
+    drawText(ctx, 'ASHBLADE', W / 2 + a, 34 + b, '#14244a', { scale: 4, align: 'center' });
+  drawText(ctx, 'ASHBLADE', W / 2, 34, '#ffffff', { scale: 4, align: 'center' });
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, 46, W, 8);
   ctx.clip();
-  drawText(ctx, 'LEAFBLADE', W / 2, 34, '#a8fff4', { scale: 4, align: 'center' });
+  drawText(ctx, 'ASHBLADE', W / 2, 34, '#ffb050', { scale: 4, align: 'center' });
   ctx.restore();
   px(ctx, '#e8b848', 110, 60, 164, 1);
   px(ctx, '#e8b848', 190, 58, 4, 5);
@@ -233,23 +271,23 @@ function render() {
   game.fx.draw(ctx, cam);
   Background.drawFront(ctx, cam, game.t);
   drawHUD();
+  if (game.state === 'play') drawCrosshair();
 
   if (game.state === 'paused') {
     dim(0.75);
     text('PAUSED', W / 2, 30, '#ffffff', { align: 'center', scale: 2 });
     [
-      'LEFT / RIGHT     MOVE',
-      'Z                JUMP (HOLD = HIGHER)',
-      'Z IN THE AIR     SPIRIT WINGS - HOLD Z TO RISE, RELEASE TO GLIDE',
-      'DOWN IN FLIGHT   FOLD WINGS AND DROP',
-      'X                SWORD (PRESS 3X FOR THE COMBO)',
-      'UP + X           UP SLASH',
-      'DOWN + X (AIR)   DOWN THRUST - BOUNCE OFF ENEMIES',
-      'C                CROSSBOW',
+      'A / D            MOVE',
+      'SPACE            JUMP, AGAIN IN AIR TO DOUBLE JUMP',
+      'V                JETPACK ON / OFF - WASD TO FLY',
+      'MOUSE            AIM',
+      'LEFT CLICK / X   ATTACK - HOLD TO FIRE THE MACHINE GUN',
+      'RIGHT CLICK / Q  SWITCH: MACHINE GUN <> MACHETE',
+      'MACHETE          X3 COMBO, AIM UP / DOWN IN AIR FOR SPECIALS',
       'SHIFT            DASH',
-      'DOWN + Z         DROP THROUGH BRANCHES',
+      'S + SPACE        DROP THROUGH BRANCHES',
       'ENTER            RESUME',
-    ].forEach((l, i) => text(l, 20, 56 + i * 13, i === 10 ? '#e8b848' : '#e8e4f0'));
+    ].forEach((l, i) => text(l, 14, 56 + i * 13, i === 9 ? '#e8b848' : '#e8e4f0'));
   } else if (game.state === 'dead') {
     dim(Math.min(0.75, game.stateT / 80));
     if (game.stateT > 40) text('DEFEATED', W / 2, 96, '#ff4a6a', { align: 'center', scale: 3 });

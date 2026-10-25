@@ -44,34 +44,44 @@ function limb(x, pts, w, fill, shade) {
 }
 
 const SKINS = {
+  // A Metal Slug–style commando: spiky hair, olive vest with pouches, cargo pants, red scarf, jetpack.
   rowan: {
     head: buildImage([
-      '..oooo..',
-      '.oNNnno.',
-      'oNNnnnno',
-      'oNnmssso',
-      'onmmsseo',
-      'onmrrrro',
-      '.omRRRo.',
-      '..ooooo.',
-    ], { o: OL, n: '#323a6a', N: '#56609a', m: '#1e2448', s: '#f0c8a0', e: '#5ff0e0', r: '#d03040', R: '#901830' }),
+      '...o.o.o...',
+      '..oHoHoHo..',
+      '.oHHhHhhHo.',
+      'ohhhhhhhhho',
+      'ohhhhhsssso',
+      'ohhhssswEso',
+      'ohhssssssSo',
+      '.ohssssmsSo',
+      '..osssssSo.',
+      '...oooooo..',
+    ], { o: OL, h: '#6a3a1e', H: '#a0602e', s: '#f4c8a0', S: '#d0966c', w: '#ffffff', E: '#1a1420', m: '#a05040' }),
+    // Chunky and hunched: wide shoulders sit ahead of the hips.
     torso: buildImage([
-      '..ooooo.',
-      '.oknnnAo',
-      'oknnnnAo',
-      'oknnnnao',
-      '.oklllko',
-      '.obbgbbo',
-      '.onnnnno',
-      '.onnmnno',
-      '.ooooooo',
-    ], { o: OL, n: '#323a6a', m: '#1e2448', k: '#4a5270', a: '#8a96b0', A: '#c8d0e0', l: '#7a5034', b: '#3a2818', g: '#e8b848' }),
-    arm: { back: ['#1e2448', '#5a3a24'], front: ['#323a6a', '#7a5034'], shade: ['#1e2448', '#5a3a24'] },
-    leg: { back: ['#2a3264', '#2a3264'], front: ['#46528a', '#46528a'], shade: ['#2e3868', '#2e3868'] },
-    boot: ['#2e2a3a', '#5a5470'],
-    cloak: { base: '#3a4680', light: '#5a68a8', inner: '#b02838' },
+      '....ootttoo.',
+      '..ooVVtttvvo',
+      '.oVVvvtvvvdo',
+      'oVVppvvvppdo',
+      'oVPPpvvPPpdo',
+      'oVvvvvvvvvdo',
+      'odvvvvvvvdo.',
+      'obbbbgbbbbo.',
+      '.ovvvvvvvo..',
+      '.ooooooooo..',
+    ], { o: OL, v: '#6a7a3a', V: '#8a9a4a', d: '#4a5628', p: '#7a6a3a', P: '#a08a4a', t: '#ece4cc', b: '#3a2818', g: '#e8b848' }),
+    shoulder: [-1, 4],
+    hips: [-2, 2],
+    limbs: { upper: 4, fore: 4, armW: 3, thigh: 5, shin: 6 },
+    arm: { back: ['#c08860', '#c08860'], front: ['#f4c8a0', '#f4c8a0'], shade: ['#d0966c', '#d0966c'], glove: '#3a3028' },
+    leg: { back: ['#8a7448', '#8a7448'], front: ['#b89a64', '#b89a64'], shade: ['#8a7044', '#8a7044'], w: 4 },
+    boot: ['#4a3020', '#6a4a2a'],
+    cloak: null,
     scarf: ['#e03848', '#a02030'],
-    pauldron: ['#8a96b0', '#d8e0f0'],
+    pauldron: null,
+    jetpack: true,
+    sheath: true,
   },
   knight: {
     head: buildImage([
@@ -96,7 +106,7 @@ const SKINS = {
       '.ooooooo',
     ], { o: OL, a: '#5a4a6a', A: '#8a7aa0', k: '#2e2440', t: '#7ab040' }),
     arm: { back: ['#3a2e4a', '#3a2e4a'], front: ['#5a4a6a', '#6a5a7a'], shade: ['#3a2e4a', '#3a2e4a'] },
-    leg: { back: ['#2e2440', '#2e2440'], front: ['#4a3a5a', '#4a3a5a'], shade: ['#2e2440', '#2e2440'] },
+    leg: { back: ['#2e2440', '#2e2440'], front: ['#4a3a5a', '#4a3a5a'], shade: ['#2e2440', '#2e2440'], w: 2 },
     boot: ['#1a1224', '#3a2e4a'],
     cloak: { base: '#4a2050', light: '#6a3070', inner: '#2a1030' },
     scarf: null,
@@ -105,31 +115,67 @@ const SKINS = {
   },
 };
 
-const WING = buildImage([
-  'oo',
-  'oWWoo',
-  '.oWwWWoo',
-  '.oWwwwWWWoo',
-  '..oWwwwwwWWWoo',
-  '..oWwwccwwwwWWWoo',
-  '...oWwwccccwwwwWWWo',
-  '....oWwccccccwwwwwWo',
-  '.....oowwccccccwwwwWo',
-  '.......oowwccccccwwWo',
-  '.........ooowwwwwwwo',
-  '............ooooooo',
-], { o: '#2a9a98', W: '#f0fffa', w: '#a8f4e8', c: '#58d8c8' });
-const WING_DOWN = flipV(WING);
-
+// Combat machete: red-wrapped grip, broad blade curving back toward a bright edge.
 function blade(x, hand, deg) {
-  const a = deg * DEG, dx = Math.cos(a), dy = Math.sin(a), nx = Math.round(-dy), ny = Math.round(dx);
-  const dot = (i, off, col) => px(x, col, Math.round(hand[0] + dx * i) + nx * off, Math.round(hand[1] + dy * i) + ny * off);
-  dot(-2, 0, '#3a2818');
-  dot(-1, 0, '#5a3a24');
-  for (const o of [-2, -1, 0, 1, 2]) dot(0, o, '#e8b848');
-  for (let i = 1; i <= 16; i++) {
-    dot(i, 0, i === 16 ? '#ffffff' : '#dce4f0');
-    if (i < 15) dot(i, 1, '#5ff0e0');
+  const a = deg * DEG, dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+  const at = (i, off) => [Math.round(hand[0] + dx * i + nx * off), Math.round(hand[1] + dy * i + ny * off)];
+  const dot = (i, off, col) => { const [p, q] = at(i, off); px(x, col, p, q); };
+  for (let i = -4; i <= 0; i++) dot(i, 0, i % 2 ? '#a02020' : '#2a1a1a');
+  for (const o of [-1, 0, 1]) dot(1, o, '#3a3a44');
+  const LEN = 15;
+  for (let i = 2; i <= LEN; i++) {
+    const k = (i - 2) / (LEN - 2), curve = k * k * 2.2, wide = i < LEN - 1 ? 2 : 1;
+    for (let o = -1; o <= wide; o++) dot(i, o - curve, OL);
+    dot(i, -curve, '#7a7e8c');
+    if (wide > 1) dot(i, 1 - curve, '#c8ccd6');
+    dot(i, wide - curve, i === LEN ? '#ffffff' : '#f4f6fa');
+  }
+}
+
+// Heavy machine gun at any angle (0 = forward, -90 = up, 90 = down). kick pushes it back
+// along the barrel for recoil; flash draws a big muzzle flash that changes shape every shot.
+function gun(x, hand, deg, flash, kick = 0) {
+  const a = deg * DEG, dx = Math.cos(a), dy = Math.sin(a), nx = -dy, ny = dx;
+  const at = (i, off) => [Math.round(hand[0] + dx * (i - kick) + nx * off), Math.round(hand[1] + dy * (i - kick) + ny * off)];
+  // parts: [from, to, offsets across the gun, color]; "+" offsets are below the gun when it points forward
+  const parts = [
+    [-6, -3, [0, 1], '#5a3a24'],          // stock
+    [-3, 5, [-1, 0, 1], '#4a4e5c'],       // receiver
+    [-3, 5, [-1], '#8a90a4'],             // receiver highlight
+    [1, 3, [2, 3, 4], '#3a3e4a'],         // magazine
+    [6, 10, [-1, 0], '#5a5e6c'],          // barrel shroud
+    [11, 15, [0], '#2e3038'],             // barrel
+  ];
+  for (const [i0, i1, offs] of parts)
+    for (let i = i0 - 1; i <= i1 + 1; i++)
+      for (const o of [Math.min(...offs) - 1, ...offs, Math.max(...offs) + 1]) { const [p, q] = at(i, o); px(x, OL, p, q); }
+  for (const [i0, i1, offs, col] of parts)
+    for (let i = i0; i <= i1; i++) for (const o of offs) { const [p, q] = at(i, o); px(x, col, p, q); }
+  for (const i of [7, 9]) { const [p, q] = at(i, -1); px(x, '#1a1c24', p, q); } // shroud holes
+  if (!flash) return;
+  const [fx, fy] = at(18, 0), big = flash === 2;
+  x.globalAlpha = 0.5;
+  circ(x, '#ffe060', fx + dx * 2, fy + dy * 2, big ? 5 : 4);
+  x.globalAlpha = 1;
+  px(x, '#ffffff', fx - 1, fy - 1, 3, 3);
+  for (const [ox, oy, r] of [[dx * 4, dy * 4, 2], [dx * 7, dy * 7, 1], [nx * 3, ny * 3, 1], [-nx * 3, -ny * 3, 1]]) px(x, '#ffe060', fx + ox - r / 2, fy + oy - r / 2, r + 1, r + 1);
+  px(x, '#ff9030', fx + dx * (big ? 9 : 8), fy + dy * (big ? 9 : 8), 2, 2);
+}
+
+// Jetpack worn on the back. thrust 0..1 shoots fire out of both nozzles.
+function jetpack(x, x0, y0, thrust, t, tilt = 0) {
+  px(x, OL, x0, y0, 6, 11);
+  px(x, '#6a7088', x0 + 1, y0 + 1, 4, 9);
+  px(x, '#9aa2b8', x0 + 1, y0 + 1, 1, 9);
+  px(x, '#e03848', x0 + 1, y0 + 3, 4, 1);
+  for (const nx of [x0, x0 + 3]) { px(x, OL, nx, y0 + 10, 3, 3); px(x, '#3a3e50', nx + 1, y0 + 10, 1, 2); }
+  if (!thrust) return;
+  for (const nx of [x0 + 1, x0 + 4]) {
+    const len = Math.round(thrust * (5 + ((Math.floor(t * 9) + nx) % 4)));
+    for (let i = 0; i < len; i++) {
+      const k = i / len, wob = k > 0.4 && (i + Math.floor(t * 9)) % 2 ? 1 : 0;
+      px(x, k < 0.2 ? '#ffffff' : k < 0.45 ? '#ffe060' : k < 0.75 ? '#ff9030' : '#e04020', nx - wob - tilt * i * 0.35, y0 + 13 + i, k < 0.55 ? 2 : 1, 1);
+    }
   }
 }
 
@@ -149,51 +195,50 @@ function renderRig(x, skin, pose, t) {
   const hx = 40 + (pose.hx || 0), hy = 32 + (pose.hy || 0), lean = pose.lean || 0;
   const flow = pose.flow ?? 0.4;
 
-  if (pose.wings) {
-    const up = pose.wings === 'up', w = up ? WING : WING_DOWN;
-    x.globalAlpha = 0.55;
-    x.drawImage(w, hx - 22 + lean, up ? hy - 22 : hy - 8);
-    x.globalAlpha = 0.9;
-    x.drawImage(w, hx - 19 + lean, up ? hy - 19 : hy - 6);
-    x.globalAlpha = 1;
-  }
-  // Cloak: a tattered sheet hanging from the shoulders, swept back by motion.
-  const cy0 = hy - 7, cy1 = hy + 5 + (pose.cloakLen || 0);
-  for (let y = cy0; y <= cy1; y++) {
-    const k = (y - cy0) / (cy1 - cy0);
-    const left = Math.round(hx - 3 + lean - k * (1 + flow * 7) - Math.sin(t * 1.7 + y * 0.35) * k * 1.5);
-    const right = Math.round(hx + lean - 1 - k * flow * 4);
-    px(x, OL, left - 1, y, right - left + 2, 1);
-    px(x, k > 0.15 && k < 0.95 ? skin.cloak.base : skin.cloak.light, left, y, right - left, 1);
-    px(x, skin.cloak.inner, right - 1, y);
-  }
-  for (let i = 0; i < 4; i++) {
-    const bx = Math.round(hx - 3 + lean - (1 + flow * 7) - Math.sin(t * 1.7 + cy1 * 0.35) * 1.5) + i * 2;
-    px(x, OL, bx, cy1 + 1, 2, 1 + ((i * 7 + Math.round(t)) % 3));
+  if (skin.cloak) { // a tattered sheet hanging from the shoulders, swept back by motion
+    const cy0 = hy - 7, cy1 = hy + 5;
+    for (let y = cy0; y <= cy1; y++) {
+      const k = (y - cy0) / (cy1 - cy0);
+      const left = Math.round(hx - 3 + lean - k * (1 + flow * 7) - Math.sin(t * 1.7 + y * 0.35) * k * 1.5);
+      const right = Math.round(hx + lean - 1 - k * flow * 4);
+      px(x, OL, left - 1, y, right - left + 2, 1);
+      px(x, k > 0.15 && k < 0.95 ? skin.cloak.base : skin.cloak.light, left, y, right - left, 1);
+      px(x, skin.cloak.inner, right - 1, y);
+    }
   }
 
+  const L = skin.limbs || { upper: 4, fore: 4, armW: 2, thigh: 6, shin: 6 };
   const arm = (sh, [up, el], back) => {
-    const e = fwd(sh, up, 4), hand = fwd(e, up + el, 4);
-    limb(x, [sh, e, hand], 2, back ? skin.arm.back : skin.arm.front, back ? null : skin.arm.shade);
+    const e = fwd(sh, up, L.upper), hand = fwd(e, up + el, L.fore);
+    limb(x, [sh, e, hand], L.armW, back ? skin.arm.back : skin.arm.front, back ? null : skin.arm.shade);
+    if (skin.arm.glove) px(x, skin.arm.glove, hand[0] - 1, hand[1] - 1, 2, 2);
     return hand;
   };
   const leg = ([th, kn], hip, back) => {
-    const k = fwd(hip, th, 6), a = fwd(k, th - kn, 6);
-    limb(x, [hip, k, a], 2, back ? skin.leg.back : skin.leg.front, back ? null : skin.leg.shade);
-    px(x, OL, a[0] - 2, a[1] - 1, 6, 3);
-    px(x, back ? OL : skin.boot[0], a[0] - 1, a[1] - 1, 4, 2);
+    const k = fwd(hip, th, L.thigh), a = fwd(k, th - kn, L.shin);
+    limb(x, [hip, k, a], skin.leg.w, back ? skin.leg.back : skin.leg.front, back ? null : skin.leg.shade);
+    px(x, OL, a[0] - 2, a[1] - 1, 7, 3);
+    px(x, back ? OL : skin.boot[0], a[0] - 1, a[1] - 1, 5, 2);
     if (!back) px(x, skin.boot[1], a[0] - 1, a[1] - 1, 2, 1);
     return a[1];
   };
 
-  const shoulderB = [hx - 2 + lean, hy - 6], shoulderF = [hx + 2 + lean, hy - 6];
-  const backHand = arm(shoulderB, pose.arms[0], true);
-  if (pose.sword != null && pose.swordBack) blade(x, backHand, pose.sword);
-  const footY = Math.max(leg(pose.legs[0], [hx - 1, hy], true), leg(pose.legs[1], [hx + 1, hy], false));
-  x.drawImage(skin.torso, hx - 4 + lean, hy - 8);
-  x.drawImage(skin.head, hx - 3 + lean, hy - 15);
+  const th = skin.torso.height, tw = skin.torso.width, top = hy + 1 - th; // torso top
+  const [sb, sf] = skin.shoulder || [-2, 2], [hb, hf] = skin.hips || [-1, 1];
+  const shoulderB = [hx + sb + lean, top + 3], shoulderF = [hx + sf + lean, top + 3];
+  arm(shoulderB, pose.arms[0], true);
+  const footY = Math.max(leg(pose.legs[0], [hx + hb, hy], true), leg(pose.legs[1], [hx + hf, hy], false));
+  if (skin.sheath && pose.sword == null) { // sword sheathed across the back, hilt over the shoulder
+    for (let i = 0; i < 13; i++) px(x, i < 3 ? '#5a3a24' : '#3a2818', hx - 9 + lean + i * 0.7, top - 3 + i, 2, 1);
+    px(x, '#e8b848', hx - 8 + lean, top - 1, 3, 1);
+  }
+  if (skin.jetpack && pose.gun == null) gun(x, [hx - 8 + lean, top - 2], 70); // machine gun slung on the back
+  if (skin.jetpack) jetpack(x, hx - 11 + lean, top, pose.jet || 0, t, pose.jetTilt || 0);
+  x.drawImage(skin.torso, hx - Math.floor(tw / 2) + lean, top);
+  const hw = skin.head.width;
+  x.drawImage(skin.head, hx - Math.floor(hw / 2) + 1 + lean + (pose.hunch || 0), top + 2 - skin.head.height + (pose.hunch || 0));
   if (skin.horns) {
-    const ox = hx - 3 + lean, oy = hy - 15;
+    const ox = hx - 3 + lean, oy = top + 2 - skin.head.height;
     px(x, '#7ab040', ox + 1, oy - 2, 1, 2);
     px(x, '#7ab040', ox, oy - 3);
     px(x, '#7ab040', ox + 5, oy - 2, 1, 2);
@@ -202,27 +247,21 @@ function renderRig(x, skin, pose, t) {
   if (skin.scarf) {
     const pts = [];
     for (let i = 1; i <= 9; i++)
-      pts.push([hx + lean - 1 - i * 2.3 * (0.4 + flow), hy - 9 + i * (0.9 - flow * 0.6) + Math.sin(t * 1.3 + i * 0.8) * i * 0.25, i < 6 ? 2 : 1]);
+      pts.push([hx + lean - 2 - i * 2.3 * (0.4 + flow), top + i * (0.9 - flow * 0.6) + Math.sin(t * 1.3 + i * 0.8) * i * 0.25, i < 6 ? 2 : 1]);
     for (const [sx, sy, s] of pts) px(x, OL, sx - 1, sy - 1, s + 2, s + 2);
     pts.forEach(([sx, sy, s], i) => px(x, skin.scarf[i % 2], sx, sy, s, s));
+    px(x, OL, hx + lean - 3, top - 1, 9, 3); // knot at the neck
+    px(x, skin.scarf[0], hx + lean - 2, top, 7, 1);
   }
   const hand = arm(shoulderF, pose.arms[1], false);
-  px(x, OL, shoulderF[0] - 2, shoulderF[1] - 2, 5, 4);
-  px(x, skin.pauldron[0], shoulderF[0] - 1, shoulderF[1] - 1, 3, 2);
-  px(x, skin.pauldron[1], shoulderF[0] - 1, shoulderF[1] - 1, 2, 1);
-
-  if (pose.sword != null && !pose.swordBack) blade(x, hand, pose.sword);
-  if (pose.mace != null) mace(x, hand, pose.mace);
-  if (pose.bow) { // wrist crossbow
-    px(x, OL, hand[0] - 2, hand[1] - 4, 5, 9);
-    px(x, '#7a5034', hand[0] - 1, hand[1] - 3, 2, 7);
-    px(x, '#e8b848', hand[0], hand[1] - 1, 3, 2);
-    if (pose.bow === 'fire') {
-      px(x, '#ffffff', hand[0] + 4, hand[1] - 1, 2, 2);
-      px(x, '#5ff0e0', hand[0] + 6, hand[1] - 2);
-      px(x, '#5ff0e0', hand[0] + 6, hand[1] + 1);
-    }
+  if (skin.pauldron) {
+    px(x, OL, shoulderF[0] - 2, shoulderF[1] - 2, 5, 4);
+    px(x, skin.pauldron[0], shoulderF[0] - 1, shoulderF[1] - 1, 3, 2);
+    px(x, skin.pauldron[1], shoulderF[0] - 1, shoulderF[1] - 1, 2, 1);
   }
+  if (pose.sword != null) blade(x, hand, pose.sword);
+  if (pose.gun != null) gun(x, hand, pose.gun, pose.flash, pose.kick);
+  if (pose.mace != null) mace(x, hand, pose.mace);
   return footY;
 }
 
@@ -267,15 +306,21 @@ function snapshotRig(skin, pose, cx, feetY, facing, t, tint) {
   return { img, x, y };
 }
 
-// Pose library. Arrays are [back, front]; each limb is [upper angle, bend].
+// Pose library. Arrays are [back, front]; each limb is [upper angle, bend]. gun = screen angle of the handgun.
+const CARRY = { arms: [[78, 18], [88, 6]], gun: 0 }; // machine gun held level at the chest, both hands
+const BOB = [0, 1, 2, 1]; // idle breathing: knees bend in a 4-step rhythm, so the whole body rises and falls
+
 const POSE = {
-  idle: t => ({ hy: (t >> 5) & 1, flow: 0.25, legs: [[-6, 3], [8, 4]], arms: [[-6, 14], [8, 22]], sword: 70 }),
+  idle: t => {
+    const s = BOB[(t >> 3) & 3];
+    return { hy: 0, lean: 2, hunch: 1, flow: 0.25, legs: [[-30 - s * 2, 48 + s * 9], [34 + s * 2, 62 + s * 9]], ...CARRY };
+  },
   run: (frame, flow = 0.9) => {
     const p = frame / 8 * Math.PI * 2;
     return {
-      hy: Math.abs(Math.sin(p)) > 0.7 ? 0 : -1, lean: 1, flow,
-      legs: [[38 * Math.sin(p + Math.PI), 10 + 70 * Math.max(0, Math.cos(p + Math.PI))], [38 * Math.sin(p), 10 + 70 * Math.max(0, Math.cos(p))]],
-      arms: [[45 * Math.sin(p), 40], [-40 * Math.sin(p), 75]], sword: 150, swordBack: true,
+      hy: Math.abs(Math.sin(p)) > 0.7 ? 0 : -1, lean: 3, hunch: 1, flow,
+      legs: [[6 + 38 * Math.sin(p + Math.PI), 42 + 60 * Math.max(0, Math.cos(p + Math.PI))], [6 + 38 * Math.sin(p), 42 + 60 * Math.max(0, Math.cos(p))]],
+      ...CARRY,
     };
   },
   walk: frame => {
@@ -286,17 +331,24 @@ const POSE = {
       arms: [[20 * Math.sin(p), 20], [10, 60]],
     };
   },
-  skid: { hy: 2, lean: -2, flow: 1.0, legs: [[-35, 10], [28, 30]], arms: [[-50, 20], [-30, 40]], sword: 150, swordBack: true },
-  rise: { hy: -1, flow: 0.2, cloakLen: 2, legs: [[-14, 20], [45, 80]], arms: [[-40, 40], [150, 20]], sword: -60 },
-  peak: { hy: 0, flow: 0.6, legs: [[10, 50], [30, 60]], arms: [[-100, 30], [100, 20]], sword: 10 },
-  fall: { hy: 0, flow: 0.1, cloakLen: -3, legs: [[-15, 10], [20, 18]], arms: [[-120, 20], [125, 20]], sword: -20 },
-  land: { hy: 4, lean: 2, flow: 0.5, legs: [[38, 80], [55, 95]], arms: [[20, 50], [40, 60]], sword: 80 },
-  fly: flap => ({ hy: 0, lean: 1, flow: 1.1, legs: [[-30, 40], [-14, 30]], arms: [[-30, 40], [86, 4]], wings: flap ? 'down' : 'up', bow: true }),
-  glide: { hy: 0, lean: 1, flow: 0.8, legs: [[-20, 30], [-5, 25]], arms: [[-40, 30], [70, 10]], wings: 'up', bow: true },
-  dash: { hy: 1, lean: 3, flow: 1.5, legs: [[-50, 30], [25, 70]], arms: [[-70, 20], [-55, 30]], sword: 165, swordBack: true },
-  hurt: { hy: 0, lean: -2, flow: 0.2, legs: [[-20, 20], [10, 30]], arms: [[-140, 20], [-120, 30]], sword: -30 },
-  lunge: [{ hy: 1, lean: -1, legs: [[-12, 12], [24, 30]] }, { hy: 2, lean: 2, legs: [[-30, 10], [45, 50]] }, { hy: 2, lean: 2, legs: [[-30, 10], [45, 55]] }],
+  skid: { hy: 4, lean: -1, hunch: 1, flow: 1.0, legs: [[-40, 20], [30, 50]], arms: [[-40, 20], [40, 40]], gun: 30 },
+  rise: { hy: 1, lean: 1, hunch: 1, flow: 0.2, legs: [[-12, 40], [40, 85]], ...CARRY },
+  peak: { hy: 1, lean: 2, hunch: 1, flow: 0.6, legs: [[10, 60], [35, 75]], ...CARRY },
+  fall: { hy: 1, lean: 1, hunch: 1, flow: 0.1, legs: [[-22, 30], [25, 45]], ...CARRY },
+  flip: { hy: -1, lean: 2, hunch: 1, flow: 0.9, legs: [[50, 100], [70, 110]], ...CARRY, jet: 0.6 },
+  land: { hy: 6, lean: 3, hunch: 2, flow: 0.5, legs: [[40, 95], [55, 105]], ...CARRY },
+  jet: { hy: 2, lean: 2, hunch: 1, flow: 1.0, legs: [[-25, 50], [-5, 45]], ...CARRY, jet: 1 },
+  dash: { hy: 3, lean: 4, hunch: 2, flow: 1.5, legs: [[-50, 30], [30, 75]], arms: [[-60, 20], [-40, 30]], gun: 150, jet: 0.7 },
+  hurt: { hy: 1, lean: -2, flow: 0.2, legs: [[-20, 30], [10, 40]], arms: [[-140, 20], [-120, 30]], gun: -40 },
+  lunge: [{ hy: 3, lean: 0, hunch: 1, legs: [[-18, 30], [26, 50]] }, { hy: 4, lean: 3, hunch: 1, legs: [[-32, 20], [48, 70]] }, { hy: 4, lean: 3, hunch: 1, legs: [[-32, 20], [48, 75]] }],
 };
+
+// Both hands on the gun pointing at aimDeg (0 = forward, -90 = up, 90 = down, any angle between).
+function aimArms(aimDeg) {
+  const up = 90 - aimDeg;
+  return { arms: [[up - 10, 22], [up, 2]], gun: aimDeg };
+}
+
 
 // ================================================================ SLASH ARCS
 // A crescent that tapers at both ends; anchored at the canvas centre (cx, cy).
@@ -314,7 +366,7 @@ function makeArc(R, r, a0, a1) {
       if (d > R || d < inner) continue;
       const k = (R - d) / (R - r);
       if (k > 0.7 && (pxl + py) % 2) continue;
-      px(x, k < 0.15 ? '#ffffff' : k < 0.4 ? '#c8fff4' : k < 0.7 ? '#5ff0e0' : '#2a9a98', pxl, py);
+      px(x, k < 0.15 ? '#ffffff' : k < 0.4 ? '#ffeccc' : k < 0.7 ? '#ffb050' : '#c05028', pxl, py);
     }
   return { r: c, l: flipped(c), cx, cy };
 }
@@ -637,17 +689,23 @@ function peakRange(x, width, baseY, peaks, c) {
       }
     if (best <= 0) continue;
     const top = Math.max(0, Math.round(baseY - best));
+    const half = p.w / 2, inv = half / Math.max(1, p.h); // horizontal run per pixel of drop along the outline
     for (let y = top; y < H; y++) {
       const rel = y - top, height = baseY - y; // height of this pixel above the range's foot
       const ridge = bd + rel * 0.18 * (p.r - p.l) + Math.sin(y * 0.3 + p.x) * 2 + Math.sin(y * 0.08 + p.x * 3) * 4;
       const lit = ridge < 0;
-      let col = lit ? C.lit : C.shade;
-      const v = rel * 0.6 + Math.abs(bd) * 0.8 + Math.sin(i * 0.45) * 2;
-      if (rel > 2 && mod(Math.round(v), 9) === 0 && ((i * 7 + y * 3) % 5) > 1) col = lit ? C.litStreak : C.streak;
+      // Rock facets: angled planes fanning down from the summit, each a slightly different tone,
+      // separated by thin dark cracks — like chiselled rock faces.
+      const fw = Math.max(6, half * 0.28);
+      const u = (Math.abs(ridge) - rel * inv * 0.38 + Math.sin(rel * 0.13 + i * 0.04 + p.x) * fw * 0.35) / fw;
+      const facet = Math.floor(u), frac = u - facet;
+      const tone = mod(facet * 7 + Math.round(p.x), 3);
+      let col = lit ? [C.lit, C.litMid, C.litHi][tone] : [C.shade, C.shadeMid, C.shade][tone];
+      if (frac < 0.07 && rel > 3 && rel < best * 0.8) col = lit ? C.litCrack : C.crack;
       if (Math.abs(ridge) < 0.8 && rel < best * 0.5) col = C.ridge;
-      if (p.snow) {
-        const line = p.h - p.snow + Math.sin(i * 0.7 + p.x) * 2 + Math.sin(i * 0.23) * 4
-          - (Math.sin(i * 0.35 + p.x) > 0.6 ? 14 : 0) - (Math.sin(i * 0.9 + y * 0.2) > 0.85 ? 6 : 0);
+      if (p.snow) { // snow sits near the top and streaks down the gullies
+        const gully = frac < 0.35 && tone !== 1 ? 10 : 0;
+        const line = p.h - p.snow + Math.sin(i * 0.7 + p.x) * 2 + Math.sin(i * 0.23) * 3 - gully;
         if (height > line) col = lit ? C.snow : C.snowShade;
       }
       if (y === top) col = lit ? C.ridge : C.shade;

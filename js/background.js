@@ -25,18 +25,18 @@ const Background = (() => {
   // ---- far chain: palest, snowy, low contrast
   const [far1, f1] = layer();
   peakRange(f1, LW, 132, makePeaks(LW, 8, 11, 44, 74, 90, 140, 22),
-    { haze: '#d4e8f8', lit: '#c4daf2', shade: '#a6c0e4', litStreak: '#b4cdee', streak: '#98b4dc', ridge: '#e6f2fc', snow: '#ffffff', snowShade: '#dce8f8' });
+    { haze: '#d4e8f8', lit: '#c0d6f0', litMid: '#b4cceb', litHi: '#ccdff4', shade: '#a2bce2', shadeMid: '#96b2dc', litCrack: '#a8c2e6', crack: '#8aa8d4', ridge: '#e6f2fc', snow: '#ffffff', snowShade: '#dce8f8' });
 
   // ---- middle chain with the giant peak and its spires
   const [far2, f2] = layer();
   peakRange(f2, LW, 142, makePeaks(LW, 7, 23, 38, 64, 80, 130, 14),
-    { haze: '#c0d8f0', lit: '#a2c2e8', shade: '#7c9ed0', litStreak: '#90b2e0', streak: '#6a8ec4', ridge: '#d6e8f8', snow: '#ffffff', snowShade: '#ccdcf2' });
+    { haze: '#c0d8f0', lit: '#9ebee6', litMid: '#8eb0de', litHi: '#b0ceee', shade: '#7898cc', shadeMid: '#6a8cc2', litCrack: '#7c9ed2', crack: '#5a7cb4', ridge: '#d6e8f8', snow: '#ffffff', snowShade: '#ccdcf2' });
   peakRange(f2, LW, 150, [
     { x: 250, h: 122, w: 170, snow: 40, l: 1.0, r: 1.25 },
     { x: 200, h: 80, w: 44, snow: 12, l: 0.8, r: 1 }, { x: 178, h: 64, w: 34, snow: 0, l: 0.8, r: 1 },
     { x: 312, h: 92, w: 58, snow: 20, l: 1, r: 1.1 }, { x: 345, h: 70, w: 46, snow: 8, l: 1, r: 1 },
     { x: 560, h: 104, w: 150, snow: 28, l: 1.1, r: 1 }, { x: 610, h: 74, w: 50, snow: 10, l: 0.9, r: 1 }, { x: 60, h: 70, w: 120, snow: 12, l: 1, r: 1.2 },
-  ], { haze: '#a8c4e4', lit: '#7e9ecc', shade: '#58739f', litStreak: '#92b2dc', streak: '#4a6494', ridge: '#cadcf2', snow: '#f8fbff', snowShade: '#c0d0ea' });
+  ], { haze: '#a8c4e4', lit: '#86a6d0', litMid: '#7696c4', litHi: '#9ab8dc', shade: '#5a76a2', shadeMid: '#4e6a96', litCrack: '#5e7eae', crack: '#3e5682', ridge: '#d0e0f4', snow: '#f8fbff', snowShade: '#c0d0ea' });
   // forest creeping up the mountains' feet
   pineRidge(f2, LW, i => Math.round(144 + wave(i, [4, 3, 1], [2, 7, 2])), 7, 14, 4, 31,
     { ground: '#6a98b4', a: '#6292b0', b: '#5a88a8', dark: '#5280a0' }, wrap);
