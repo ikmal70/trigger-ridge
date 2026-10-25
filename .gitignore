@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs and local scratch files
+*.log
+*.tmp
+
+# Uncomment to keep the design mockups out of the public repo / site
+# mockups/
