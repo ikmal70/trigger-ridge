@@ -239,18 +239,45 @@ function drawTitle() {
   Background.drawFront(ctx, cam, game.t);
   for (let i = 0; i < W; i += 16) ctx.drawImage(TILES.top[(i >> 4) & 3], i, 196);
   drawRig(ctx, SKINS.rowan, { ...POSE.idle(game.t), flow: 0.9 }, W / 2, 196, 1, game.t * 0.15);
-  for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [0, 2], [1, 2], [-1, 1], [2, 2]])
-    drawText(ctx, 'ASHBLADE', W / 2 + a, 34 + b, '#14244a', { scale: 4, align: 'center' });
-  drawText(ctx, 'ASHBLADE', W / 2, 34, '#ffffff', { scale: 4, align: 'center' });
+  drawLogo(W / 2, 14);
+  plate(W / 2 - 42, 144, 84, 15);
+  text('PRESS ENTER', W / 2, 149, (game.t >> 5) % 2 ? '#ffe070' : '#8a7a40', { align: 'center' });
+}
+
+// Dark plate with cut corners, an olive border and a gold trim line.
+function plate(x, y, w, h) {
+  for (let r = 0; r < h; r++) {
+    const cut = Math.max(0, 3 - Math.min(r, h - 1 - r));
+    px(ctx, OL, x + cut, y + r, w - cut * 2, 1);
+    if (r > 0 && r < h - 1) px(ctx, '#4a5628', x + cut + 1, y + r, w - cut * 2 - 2, 1);
+    if (r > 1 && r < h - 2) px(ctx, r % 2 ? '#262a1e' : '#2c3022', x + cut + 2, y + r, w - cut * 2 - 4, 1);
+  }
+  px(ctx, '#e8b848', x + 5, y + h - 3, w - 10, 1);
+}
+
+// Compact title badge: TRIGGER in hot yellow-to-orange stencil letters, RIDGE beneath between red bars.
+function drawLogo(cx, y) {
+  plate(cx - 72, y, 144, 50);
+  for (const [rx, ry] of [[cx - 67, y + 4], [cx + 65, y + 4], [cx - 67, y + 44], [cx + 65, y + 44]]) {
+    px(ctx, '#e8b848', rx, ry, 2, 2);
+    px(ctx, '#fff4b0', rx, ry, 1, 1);
+  }
+  const word = 'TRIGGER', ty = y + 8;
+  for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1], [-1, 1], [0, 2], [1, 2]])
+    drawText(ctx, word, cx + a, ty + b, '#140c04', { scale: 3, align: 'center' });
+  drawText(ctx, word, cx, ty, '#ff9a30', { scale: 3, align: 'center' });
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 46, W, 8);
+  ctx.rect(0, ty, W, 8);
   ctx.clip();
-  drawText(ctx, 'ASHBLADE', W / 2, 34, '#ffb050', { scale: 4, align: 'center' });
+  drawText(ctx, word, cx, ty, '#ffe070', { scale: 3, align: 'center' });
   ctx.restore();
-  px(ctx, '#e8b848', 110, 60, 164, 1);
-  px(ctx, '#e8b848', 190, 58, 4, 5);
-  if ((game.t >> 5) % 2) text('- PRESS ENTER -', W / 2, 150, '#fff4b0', { align: 'center' });
+  for (let i = 0; i < 7; i++) px(ctx, '#140c04', cx - 62 + i * 18, ty + 7, 18, 1); // stencil gap through the letters
+  drawText(ctx, 'RIDGE', cx, y + 31, '#f4f0e0', { scale: 2, align: 'center', shadow: '#140c04' });
+  for (const side of [-1, 1]) {
+    px(ctx, '#e03848', cx + side * 46 - 12, y + 35, 24, 2);
+    px(ctx, '#ff8a90', cx + side * 46 - 12, y + 35, 24, 1);
+  }
 }
 
 function render() {
