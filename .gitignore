@@ -14,3 +14,6 @@
 
 # Uncomment to keep the design mockups out of the public repo / site
 # mockups/
+
+# Local notes for Claude sessions (kept out of the repo)
+CLAUDE.md
